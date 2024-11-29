@@ -1,5 +1,6 @@
 import React from 'react';
 import styled from 'styled-components';
+import {Todo} from '../types';
 
 const InfoBar = styled.div`
   display: flex;
@@ -8,14 +9,14 @@ const InfoBar = styled.div`
 
 export interface TodoStatusBarProps {
   className?: string;
-  total: number;
+  todos: Array<Todo>;
 }
 
-const _TodoStatusBar: React.FC<TodoStatusBarProps> = ({className, total}) => (
+const _TodoStatusBar: React.FC<TodoStatusBarProps> = ({className, todos}) => (
   <div data-cy='TodoStatusBar' className={className}>
     <InfoBar>
-      <span>Total: {total}</span>
-      <span>Done: 0</span>
+      <span>Total: {todos.length}</span>
+      <span>Done: {todos.filter(todo => todo.done).length}</span>
     </InfoBar>
   </div>
 );

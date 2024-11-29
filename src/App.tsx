@@ -6,6 +6,7 @@ import {OnSubmit, TodoInput} from './components/TodoInput';
 import {TodoList} from './components/TodoList';
 import {Todo} from './types';
 import {TodoStatusBar} from './components/TodoStatusBar';
+import {OnToggle} from './components/TodoItem';
 
 export const AppContainer = styled.div`
   display: flex;
@@ -25,7 +26,9 @@ export const App: React.FC = () => {
 
   React.useEffect(() => {
     (async () => {
-      const response = await fetch('http://localhost:3001/todos');
+      const response = await fetch(
+        'http://localhost:3001/todos?_sort=createdTimestamp&_order=desc'
+      );
       setTodos(await response.json());
     })();
   }, []);
@@ -50,19 +53,54 @@ export const App: React.FC = () => {
       );
       return text;
     }
-    setTodos([...todos, await response.json()]);
+    setTodos([await response.json(), ...todos]);
     return '';
+  };
+
+  const updateTodoStatus: OnToggle = async (id, done) => {
+    const updatedTodo = {
+      done,
+    };
+
+    const response = await fetch(`http://localhost:3001/todos/${id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(updatedTodo),
+    });
+
+    if (!response.ok) {
+      window.alert(
+        `Unexpected error ${response.status}: ${response.statusText}`
+      );
+      return;
+    }
+
+    setTodos(prevTodos => {
+      const updatedTodos = prevTodos.map(todo =>
+        todo.id === id ? {...todo, done: !todo.done} : todo
+      );
+
+      if (updatedTodos.every(todo => todo.done)) {
+        window.alert(
+          "Congratulations, you're all set! You've done everything on your list."
+        );
+      }
+
+      return updatedTodos;
+    });
   };
 
   return (
     <AppContainer className='App'>
       <TodosHeader>
-        <TodoStatusBar total={todos.length} />
+        <TodoStatusBar todos={todos} />
       </TodosHeader>
       <TodoInput onSubmit={createTodo} />
-      <TodoList todos={todos} />
+      <TodoList todos={todos} updateTodoStatus={updateTodoStatus} />
       <TodosFooter>
-        <TodoStatusBar total={todos.length} />
+        <TodoStatusBar todos={todos} />
       </TodosFooter>
     </AppContainer>
   );
